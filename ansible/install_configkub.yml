@@ -1,0 +1,68 @@
+---
+- name: Instalar Docker, Kubectl e kind
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Instalar dependências do Docker
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Adicionar chave GPG do Docker
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Adicionar repositório do Docker
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        state: present
+
+    - name: Instalar o Docker
+      ansible.builtin.apt:
+        name: docker-ce
+        state: latest
+
+    - name: Adicionar usuário ao grupo Docker
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        group: docker
+
+    - name: Adicionar vagrant ao grupo Docker
+      ansible.builtin.user:
+        name: vagrant
+        group: docker
+        append: yes
+
+# Instalar o Kubectl
+    - name: Instalar Kubectl
+      ansible.builtin.get_url:
+        url: https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
+        dest: /usr/local/bin/kubectl
+
+# Danto permissão para o kubectl
+    
+    - name: Dando permissão para o kubectl
+      file:
+        dest: /usr/local/bin/kubectl
+        mode: a+x
+
+# Instalar e configurar o Kind
+    - name: Instalar e configurar o Kind
+      hosts: webservers
+      become: yes
+      tasks:
+        - name: Baixar o Kind
+          ansible.builtin.get_url:
+            url: https://kind.sigs.k8s.io/dl/v0.28.0/kind-linux-amd64
+            dest: /usr/local/bin/kind
+
+ # Dando permissão para o kind       
+        - name: Dando permissão para o kind
+          file: dest=/usr/local/bin/kind mode=a+x
+
