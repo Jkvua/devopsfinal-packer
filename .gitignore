@@ -2,4 +2,8 @@ packer
 vagrant
 debian12.box
 /.vagrant
-
+packer_cache
+packer_cache/ubuntu-22.04
+packer_cache/ubuntu-22.04.json
+packer_1.10.3_linux_amd64.zip
+LICENSE.txt
