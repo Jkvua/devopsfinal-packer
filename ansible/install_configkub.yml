@@ -1,4 +1,3 @@
----
 - name: Instalar Docker, Kubectl e kind
   hosts: webservers
   become: yes
@@ -15,58 +14,54 @@
 
     - name: Adicionar chave GPG do Docker
       ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
+        url: https://download.docker.com/linux/debian/gpg
         state: present
 
     - name: Adicionar repositório do Docker
       ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        repo: >
+          deb [arch=amd64] https://download.docker.com/linux/debian
+          {{ ansible_distribution_release }} stable
         state: present
 
-    - name: Instalar o Docker
+    - name: Instalar Docker Engine
       ansible.builtin.apt:
-        name: docker-ce
-        state: latest
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+        update_cache: true
 
-    - name: Adicionar usuário ao grupo Docker
-      ansible.builtin.user:
-        name: "{{ ansible_user }}"
-        group: docker
-
-    - name: Adicionar vagrant ao grupo Docker
+    - name: Adicionar usuário vagrant ao grupo docker
       ansible.builtin.user:
         name: vagrant
-        group: docker
-        append: yes
+        groups: docker
+        append: true
+
+    - name: Baixar o Kind
+      ansible.builtin.get_url:
+        url: https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64
+        dest: /usr/local/bin/kind
+        mode: '0755'
 
     - name: Instalar Kubectl
       ansible.builtin.get_url:
         url: https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
         dest: /usr/local/bin/kubectl
-
-    - name: Dando permissão para o kubectl
-      file:
-        dest: /usr/local/bin/kubectl
         mode: '0755'
 
-# Novo play separado!
-- name: Instalar e configurar o Kind
-  hosts: webservers
-  become: yes
-  tasks:
-    - name: Baixar o Kind
-      ansible.builtin.get_url:
-        url: https://kind.sigs.k8s.io/dl/v0.28.0/kind-linux-amd64
-        dest: /usr/local/bin/kind
-
-    - name: Dando permissão para o kind
-      file:
-        dest: /usr/local/bin/kind
+    - name: Criar diretório /home/vagrant/kind
+      ansible.builtin.file:
+        path: /home/vagrant/kind
+        state: directory
+        owner: vagrant
+        group: vagrant
         mode: '0755'
 
-    - name: Criar arquivo para cluster Kind
-      copy:
-        dest: /home/vagrant/kind-config.yaml
+    - name: Criar arquivo de configuração do cluster Kind
+      ansible.builtin.copy:
+        dest: /home/vagrant/kind/kind-config.yaml
         content: |
           kind: Cluster
           apiVersion: kind.x-k8s.io/v1alpha4
@@ -74,8 +69,58 @@
             - role: control-plane
             - role: worker
             - role: worker
+        owner: vagrant
+        group: vagrant
+        mode: '0644'
 
     - name: Criar o cluster Kind
       become_user: vagrant
-      command: |
-        kind create cluster --name devopsfinal --config /home/vagrant/kind-config.yaml
+      ansible.builtin.command:
+        cmd: kind create cluster --name dev-cluster --config /home/vagrant/kind/kind-config.yaml
+
+    # -- Argo CD --
+
+    - name: Criar namespace argocd
+      become_user: vagrant
+      ansible.builtin.command:
+        cmd: kubectl create namespace argocd
+      register: ns_create
+      failed_when: "'AlreadyExists' not in ns_create.stderr and ns_create.rc != 0"
+      changed_when: "'AlreadyExists' not in ns_create.stderr"
+
+    - name: Instalar o Argo CD via manifest oficial
+      become_user: vagrant
+      ansible.builtin.command:
+        cmd: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+    - name: Aguardar Argo CD estar pronto
+      become_user: vagrant
+      ansible.builtin.command:
+        cmd: kubectl rollout status deployment/argocd-server -n argocd
+      register: rollout_status
+      retries: 10
+      delay: 10
+      until: rollout_status.rc == 0
+
+    - name: Obter senha inicial do Argo CD
+      become_user: vagrant
+      ansible.builtin.command:
+        cmd: >
+          kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}"
+      register: argocd_password_raw
+
+    - name: Decodificar senha do Argo CD
+      ansible.builtin.shell: echo "{{ argocd_password_raw.stdout }}" | base64 -d
+      register: decoded_password
+
+    - name: Exibir senha do Argo CD (admin)
+      ansible.builtin.debug:
+        msg: "Senha do Argo CD (usuário: admin): {{ decoded_password.stdout }}"
+
+    - name: Expor Argo CD via port-forward (em background)
+      become_user: vagrant
+      ansible.builtin.shell: |
+        nohup kubectl port-forward svc/argocd-server -n argocd --address 0.0.0.0 8080:443 >/tmp/argo-portforward.log 2>&1 &
+      args:
+        executable: /bin/bash
+
