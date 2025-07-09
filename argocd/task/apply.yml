@@ -1,25 +1,45 @@
 ---
-- name: Criar namespace do Argo CD (se não existir)
-  command: kubectl create namespace argocd
-  ignore_errors: true
-  environment:
-    KUBECONFIG: /home/vagrant/.kube/config
+- name: Aplicar configurações do ArgoCD
+  hosts: webservers
+  become: true
+  tasks:
+    - name: Criar namespace do Argo CD (se não existir)
+      command: kubectl create namespace argocd
+      ignore_errors: true
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
 
-- name: Instalar o Argo CD via manifest oficial
-  command: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-  environment:
-    KUBECONFIG: /home/vagrant/.kube/config
+    - name: Instalar o Argo CD via manifest oficial
+      command: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
 
-- name: Criar namespace da aplicação (todo-app)
-  command: kubectl create namespace todo-app
-  ignore_errors: true
-  environment:
-    KUBECONFIG: /home/vagrant/.kube/config
+    - name: Criar namespace da aplicação (todo-app)
+      command: kubectl create namespace todo-app
+      ignore_errors: true
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
 
-- name: Aplicar aplicação backend no ArgoCD
-  become_user: vagrant
-  command: kubectl apply -f "{{ playbook_dir }}/argocd/repo-back.yml" -n argocd
+    - name: Copiar repo-back.yml para o host remoto
+      copy:
+        src: "{{ playbook_dir }}/../repo-back.yml"
+        dest: /home/vagrant/repo-back.yml
+        mode: '0644'
 
-- name: Aplicar aplicação frontend no ArgoCD
-  become_user: vagrant
-  command: kubectl apply -f "{{ playbook_dir }}/argocd/repo-front.yml" -n argocd
+    - name: Copiar repo-front.yml para o host remoto
+      copy:
+        src: "{{ playbook_dir }}/../repo-front.yml"
+        dest: /home/vagrant/repo-front.yml
+        mode: '0644'
+
+    - name: Aplicar aplicação backend no ArgoCD
+      become_user: vagrant
+      command: kubectl apply -f /home/vagrant/repo-back.yml -n argocd
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
+
+    - name: Aplicar aplicação frontend no ArgoCD
+      become_user: vagrant
+      command: kubectl apply -f /home/vagrant/repo-front.yml -n argocd
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
