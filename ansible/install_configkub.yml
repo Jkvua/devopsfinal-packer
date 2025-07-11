@@ -117,10 +117,15 @@
       ansible.builtin.debug:
         msg: "Senha do Argo CD (usuário: admin): {{ decoded_password.stdout }}"
 
-    - name: Expor Argo CD via port-forward
+    - name: Instalar tmux
+      ansible.builtin.apt:
+        name: tmux
+        state: present
+        update_cache: true
+    
+    - name: Iniciar port-forward em background com tmux
       become_user: vagrant
       ansible.builtin.shell: |
-        nohup kubectl port-forward svc/argocd-server -n argocd --address 0.0.0.0 8080:443 >/tmp/argo-portforward.log 2>&1 &
+        tmux new-session -d -s argoport 'kubectl port-forward svc/argocd-server -n argocd --address 0.0.0.0 8080:443'
       args:
-        executable: /bin/bash 
-
+        executable: /bin/bash

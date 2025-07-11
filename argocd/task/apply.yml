@@ -43,3 +43,4 @@
       command: kubectl apply -f /home/vagrant/repo-front.yml -n argocd
       environment:
         KUBECONFIG: /home/vagrant/.kube/config
+
