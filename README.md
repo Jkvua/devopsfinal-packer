@@ -79,7 +79,7 @@ Antes de executar o projeto, instale as seguintes ferramentas na sua máquina:
 > ansible-playbook -i ansible/hosts argocd/task/apply.yml
 ```
 ---
-## 👐 Abrinndo a aplicação
+## 👐 Abrindo a aplicação
 ```
 # no terminal - execute
 > ssh@<ip_maquina_virtual>
