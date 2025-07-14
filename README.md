@@ -42,10 +42,16 @@ Antes de executar o projeto, instale as seguintes ferramentas na sua máquina:
 > packer init .
 > packer plugin install github.com/hashicorp/virtualbox
 > packer plugin install github.com/hashicorp/vagrant
+```
+```
 # comando para criar a imagem
 > packer build debian.json
+```
+```
 # adicionar imagem ao grupo vagrant
 > vagrant box add debian12 debian12.box
+```
+```
 # executar o ambiente criado
 > vagrant up
 ```
@@ -62,8 +68,13 @@ Antes de executar o projeto, instale as seguintes ferramentas na sua máquina:
 ```
 # na pasta ansible - execute
 > ansible-playbook -i hosts install_nginx.yml
+```
+```
+# na pasta ansible - execute
 > ansible-playbook -i hosts install_configkub.yml
 
+```
+```
 # fora da pasta ansible - execute
 > ansible-playbook -i ansible/hosts argocd/task/apply.yml
 ```
@@ -72,21 +83,26 @@ Antes de executar o projeto, instale as seguintes ferramentas na sua máquina:
 ```
 # no terminal - execute
 > ssh@<ip_maquina_virtual>
+```
+```
 # dentro da máquina virtual - execute -> abre no navegador <ip_maquina_virtual>:30444
-> kubectl port-forward svc/provafinalfront-devops 30444:80 --address 0.0.0.0 -n default 
+> kubectl port-forward svc/provafinalfront-devops 30444:80 --address 0.0.0.0 -n default
+```
+```
 # dentro da máquina virtual - execute -> abre no navegador <ip_maquina_virtual>:30333
 > kubectl port-forward svc/provafinalfront-devops 30333:80 --address 0.0.0.0 -n default 
 ```
 --- 
 ## 📂 Pastas e arquivos importantes
 Foram criadas duas importantes pastas para a execusão desse trabalho 📂ansible e 📂argocd
-📂 Ansible -> possui os arquivos de instalção que executa a instalação das seguintes ferramentas
+---
+📂 Ansible &rarr possui os arquivos de instalção que executa a instalação das seguintes ferramentas
 - Instalação do NGINX
 - Docker e suas dependêcias
 - Kind e Kubectl
 - ArgoCD
 - Criação de clusters nós
-📂 ArgoCD -> possui arquivos para a aplicação dos repositórios no argocd
+📂 ArgoCD &rarr possui arquivos para a aplicação dos repositórios no argocd
 ---
 ## 🔚 Finalizado
 Assim concluímos o trabalho final de Fundamentos de DevOps com uma infraestrutura e deploy contínuo usando:
