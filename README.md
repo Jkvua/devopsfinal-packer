@@ -112,4 +112,7 @@ Assim concluímos o trabalho final de Fundamentos de DevOps com uma infraestrutu
 - 🤖 provisionamento
 - ⚙️ criação de um cluster
 - 🧰 packer
-- 👩‍💻 técnicas de devops 
+- 👩‍💻 técnicas de devops
+---
+## Documento com uma esplicação detalhada
+- [Docs](https://docs.google.com/document/d/1v_XVu8gk4EjF4jHtCSlURkcNNAihXEthG7mr-v3gRkY/edit?usp=sharing)
