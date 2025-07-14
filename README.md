@@ -96,13 +96,13 @@ Antes de executar o projeto, instale as seguintes ferramentas na sua máquina:
 ## 📂 Pastas e arquivos importantes
 Foram criadas duas importantes pastas para a execusão desse trabalho 📂ansible e 📂argocd
 ---
-📂 Ansible &rarr possui os arquivos de instalção que executa a instalação das seguintes ferramentas
+📂 Ansible U+2192 possui os arquivos de instalção que executa a instalação das seguintes ferramentas
 - Instalação do NGINX
 - Docker e suas dependêcias
 - Kind e Kubectl
 - ArgoCD
 - Criação de clusters nós
-📂 ArgoCD &rarr possui arquivos para a aplicação dos repositórios no argocd
+📂 ArgoCD U+2192 possui arquivos para a aplicação dos repositórios no argocd
 ---
 ## 🔚 Finalizado
 Assim concluímos o trabalho final de Fundamentos de DevOps com uma infraestrutura e deploy contínuo usando:
